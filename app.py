@@ -112,33 +112,39 @@ early_trip = st.checkbox(
     help="Triggers fixes if errors grow too fast, saving energy by preventing big buildups."
 )
 
+# Initialize session state if not present
+if 'std_dot' not in st.session_state:
+    st.session_state['std_dot'] = 0
+if 'traditional_result' not in st.session_state:
+    st.session_state['traditional_result'] = 0
+if 'b12_result' not in st.session_state:
+    st.session_state['b12_result'] = 0
+if 'stats' not in st.session_state:
+    st.session_state['stats'] = {'ops_total': 1, 'renorm_local': 0, 'max_abs_r12': 0}
+if 'residue_history' not in st.session_state:
+    st.session_state['residue_history'] = []
+if 'renorm_events' not in st.session_state:
+    st.session_state['renorm_events'] = []
+
 if st.button("Run Simulation"):
     # Generate sample data
     x = np.linspace(0.1, vector_size / 10.0, vector_size)
     y = np.ones(vector_size)
     
     # Compute
-    std_dot = np.dot(x, y)
-    traditional_result = traditional_dot_with_drift(x, y)
-    b12_result, stats, residue_history, renorm_events = b12_dot_ref(x, y, scale=scale_digits, early_trip=early_trip)
-    
-    # Store in session state
-    st.session_state['std_dot'] = std_dot
-    st.session_state['traditional_result'] = traditional_result
-    st.session_state['b12_result'] = b12_result
-    st.session_state['stats'] = stats
-    st.session_state['residue_history'] = residue_history
-    st.session_state['renorm_events'] = renorm_events
+    st.session_state['std_dot'] = np.dot(x, y)
+    st.session_state['traditional_result'] = traditional_dot_with_drift(x, y)
+    st.session_state['b12_result'], st.session_state['stats'], st.session_state['residue_history'], st.session_state['renorm_events'] = b12_dot_ref(x, y, scale=scale_digits, early_trip=early_trip)
     
     # Display Simplified Results with Benefits
     st.subheader("Simulation Results")
-    st.write(f"**Standard Compute Result (Truth)**: {std_dot:.2f}")
-    st.write(f"**Traditional Method Result**: {traditional_result:.2f} (Error: {abs(std_dot - traditional_result):.2e} - Shows potential drift)")
-    st.write(f"**Base-12 Result**: {b12_result:.2f} (Error: {abs(std_dot - b12_result):.2e} - Bounded and efficient)")
+    st.write(f"**Standard Compute Result (Truth)**: {st.session_state['std_dot']:.2f}")
+    st.write(f"**Traditional Method Result**: {st.session_state['traditional_result']:.2f} (Error: {abs(st.session_state['std_dot'] - st.session_state['traditional_result']):.2e} - Shows potential drift)")
+    st.write(f"**Base-12 Result**: {st.session_state['b12_result']:.2f} (Error: {abs(st.session_state['std_dot'] - st.session_state['b12_result']):.2e} - Bounded and efficient)")
     
     # Investor-Focused Stats
-    energy_savings_pct = (1 - (stats['renorm_local'] / stats['ops_total'])) * 30  # Scale simulation efficiency to projected 30% max savings
-    accuracy_improvement_pct = (abs(std_dot - traditional_result) - abs(std_dot - b12_result)) / abs(std_dot - traditional_result) * 100 if abs(std_dot - traditional_result) > 0 else 100  # % error reduction from simulation
+    energy_savings_pct = (1 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'])) * 30  # Scale simulation efficiency to projected 30% max savings
+    accuracy_improvement_pct = (abs(st.session_state['std_dot'] - st.session_state['traditional_result']) - abs(st.session_state['std_dot'] - st.session_state['b12_result'])) / abs(st.session_state['std_dot'] - st.session_state['traditional_result']) * 100 if abs(st.session_state['std_dot'] - st.session_state['traditional_result']) > 0 else 100  # % error reduction from simulation
     st.markdown("""
     **Key Wins**:
     - Operations Handled: {ops_total}
@@ -146,30 +152,30 @@ if st.button("Run Simulation"):
     - Max Risk Buildup: {max_abs_r12:.2e} (Controlled Automatically)
     - Projected Energy Savings: ~{energy_savings_pct:.0f}% (Based on simulation efficiency)
     - Accuracy Improvement: ~{accuracy_improvement_pct:.0f}% (From reduced errors in demo)
-    """.format(ops_total=stats['ops_total'], renorm_local=stats['renorm_local'], max_abs_r12=stats['max_abs_r12'], energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
+    """.format(ops_total=st.session_state['stats']['ops_total'], renorm_local=st.session_state['stats']['renorm_local'], max_abs_r12=st.session_state['stats']['max_abs_r12'], energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
 
     # Prepare Data for Altair Charts
     # For Timeline: Smooth with moving average for wave effect
-    moving_avg = pd.Series(residue_history).rolling(window=3, min_periods=1).mean()
-    residue_df = pd.DataFrame({'Operation': range(len(residue_history)), 'Risk Level': moving_avg})
-    renorm_df = pd.DataFrame({'Fix Point': renorm_events})
+    moving_avg = pd.Series(st.session_state['residue_history']).rolling(window=3, min_periods=1).mean()
+    residue_df = pd.DataFrame({'Operation': range(len(st.session_state['residue_history'])), 'Risk Level': moving_avg})
+    renorm_df = pd.DataFrame({'Fix Point': st.session_state['renorm_events']})
     
     # For Pie: Bin into categories
     bins = [0, 0.00001, 0.0001, float('inf')]
     labels = ['Tiny Risk', 'Medium Risk', 'High Risk']
-    hist_df = pd.DataFrame({'Category': pd.cut(residue_history, bins=bins, labels=labels)})
+    hist_df = pd.DataFrame({'Category': pd.cut(st.session_state['residue_history'], bins=bins, labels=labels)})
     pie_df = hist_df['Category'].value_counts(normalize=True).reset_index()
     pie_df.columns = ['Category', 'Percentage']
     pie_df['Percentage'] *= 100
     
     # For Gauge: Efficiency score
-    efficiency_score = 100 - (stats['renorm_local'] / stats['ops_total'] * 100)
+    efficiency_score = 100 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'] * 100)
     gauge_df = pd.DataFrame({'Score': [efficiency_score]})
     
     # For Showdown: Side-by-side errors
     showdown_df = pd.DataFrame({
         'Method': ['Traditional', 'Base-12'],
-        'Error': [abs(std_dot - traditional_result), abs(std_dot - b12_result)]
+        'Error': [abs(st.session_state['std_dot'] - st.session_state['traditional_result']), abs(st.session_state['std_dot'] - st.session_state['b12_result'])]
     })
     
     # Dashboard with New Visuals
@@ -233,8 +239,8 @@ if st.button("Run Simulation"):
 st.subheader("Estimate Your ROI with Base-12 (Based on This Simulation)")
 annual_spend = st.number_input("Your Annual Compute Spend ($)", min_value=100000, max_value=1000000000, value=10000000, step=100000, help="Enter your estimated yearly cost for AI compute (e.g., cloud bills, hardware).")
 # Use simulation-derived defaults from session state
-energy_savings_pct = st.session_state.get('energy_savings_pct', 0)
-accuracy_improvement_pct = st.session_state.get('accuracy_improvement_pct', 0)
+energy_savings_pct = (1 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'])) * 30  # Scale simulation efficiency to projected 30% max savings
+accuracy_improvement_pct = (abs(st.session_state['std_dot'] - st.session_state['traditional_result']) - abs(st.session_state['std_dot'] - st.session_state['b12_result'])) / abs(st.session_state['std_dot'] - st.session_state['traditional_result']) * 100 if abs(st.session_state['std_dot'] - st.session_state['traditional_result']) > 0 else 100  # % error reduction from simulation
 st.markdown("""
 **Simulation-Based Defaults**: Energy Savings ~{energy_savings_pct:.0f}%, Accuracy Improvement ~{accuracy_improvement_pct:.0f}% (Run simulation first for accurate values; adjust if needed)
 """.format(energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
