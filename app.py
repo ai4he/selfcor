@@ -263,3 +263,4 @@ How to Explain It: "Head-to-head: Red bar is traditional compute's error—tall 
 
 Overall Pitch Tie-In
 "These visuals aren't just data—they show real value: Efficiency (gauge), control (wave), minimization (pie), and superiority (showdown). Base-12 turns AI compute from a cost center into a profit driver." For investors, emphasize projections: "At data center scale, this means $10-50M annual savings per client."
+""")
