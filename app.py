@@ -3,20 +3,16 @@ import math
 import numpy as np
 import altair as alt
 import pandas as pd
-
 # Base-12 Helper Functions (simplified for demo)
 def b12_pow12(s):
     return math.pow(12.0, float(s))
-
 def b12_ulp12(scale_digits):
     return math.pow(12.0, -float(scale_digits))
-
 def b12_quantize_nearest_even_digit12(x, scale_digits):
     S = b12_pow12(scale_digits)
     y = x * S
-    yi = round(y)  # Ties to even in Python 3
+    yi = round(y) # Ties to even in Python 3
     return yi / S
-
 # Base-12 Dot Function with Stats
 def b12_dot_ref(x, y, scale=4, early_trip=True):
     A = 0.0
@@ -24,12 +20,12 @@ def b12_dot_ref(x, y, scale=4, early_trip=True):
     c = 0
     ulp = b12_ulp12(scale)
     n = len(x)
-    
+   
     residue_history = []
     renorm_events = []
     ops_total = 0
     renorm_local = 0
-    
+   
     for i in range(n):
         t = float(x[i]) * float(y[i])
         q = b12_quantize_nearest_even_digit12(t, scale)
@@ -44,38 +40,34 @@ def b12_dot_ref(x, y, scale=4, early_trip=True):
             r12 -= adj
             renorm_events.append(i)
             renorm_local += 1
-    
+   
     # Final fold
     if abs(r12) > 0.0:
         adj = b12_quantize_nearest_even_digit12(r12, scale)
         A += adj
         renorm_local += 1
-    
+   
     stats = {
         'ops_total': ops_total,
         'renorm_local': renorm_local,
         'max_abs_r12': max(residue_history) if residue_history else 0,
     }
-    
+   
     return A, stats, residue_history, renorm_events
-
 # Simulated Traditional Dot with Drift (for comparison)
 def traditional_dot_with_drift(x, y):
     # Simulate drift by using lower precision and adding small random noise
-    drift = np.cumsum(np.random.normal(0, 1e-5, len(x)))
-    return np.dot(x, y) + np.sum(drift)
-
+    noise = np.random.normal(0, 1e-5, len(x))
+    drift = np.cumsum(noise)
+    return np.dot(x, y) + drift[-1], list(np.abs(drift))
 # Streamlit App - Investor-Friendly Version
 st.title("Base-12: Revolutionizing AI Compute Efficiency")
-
 # Hero Section with Pitch
 st.markdown("""
 ### The Big Idea: Self-Correcting Compute for Smarter, Cheaper AI
-In today's AI world, computations like training models can waste massive energy on error corrections—driving up costs and slowing innovation. Base-12 changes that with a breakthrough self-correcting architecture inspired by harmonic math. It bounds errors automatically, reduces energy use by up to 30% (based on early tests), and makes AI faster and more reliable. 
-
+In today's AI world, computations like training models can waste massive energy on error corrections—driving up costs and slowing innovation. Base-12 changes that with a breakthrough self-correcting architecture inspired by harmonic math. It bounds errors automatically, reduces energy use by up to 30% (based on early tests), and makes AI faster and more reliable.
 Think: Fewer data center bills, greener tech, and a competitive edge in AI/ML. This demo shows it in action on a simple calculation—imagine scaling this to full models!
 """)
-
 # Problem Section
 with st.expander("The Problem: Why Traditional Compute Fails"):
     st.markdown("""
@@ -83,7 +75,6 @@ with st.expander("The Problem: Why Traditional Compute Fails"):
     - **Energy Waste**: Billions spent on power for retries and high-precision hardware.
     - **Market Opportunity**: AI compute market is $100B+ and growing—efficiency wins big.
     """)
-
 # Solution Section
 with st.expander("Our Solution: Base-12 Self-Correction"):
     st.markdown("""
@@ -92,31 +83,30 @@ with st.expander("Our Solution: Base-12 Self-Correction"):
     - Recursive: Works from small ops to full pipelines—patent-pending tech for middleware and hardware.
     - Benefits: Lower energy per correct result, bounded accuracy, scalable for AI training.
     """)
-
 st.subheader("See It in Action: Interactive Demo")
-
 # Simplified User Inputs with Explanations
 vector_size = st.slider(
-    "Computation Size (Bigger = More Operations, Like Larger AI Models)", 
+    "Computation Size (Bigger = More Operations, Like Larger AI Models)",
     min_value=12, max_value=120, value=24, step=12,
     help="Choose how many operations to simulate. Multiples of 12 show full self-correction cycles."
 )
 scale_digits = st.slider(
-    "Precision Level (Higher = More Accurate, Like Fine-Tuning Models)", 
+    "Precision Level (Higher = More Accurate, Like Fine-Tuning Models)",
     min_value=3, max_value=6, value=4,
     help="Controls how finely we quantize values—higher means better accuracy but tests efficiency."
 )
 early_trip = st.checkbox(
-    "Enable Smart Early Corrections (Recommended for Real-World Efficiency)", 
+    "Enable Smart Early Corrections (Recommended for Real-World Efficiency)",
     value=True,
     help="Triggers fixes if errors grow too fast, saving energy by preventing big buildups."
 )
-
 # Initialize session state if not present
 if 'std_dot' not in st.session_state:
     st.session_state['std_dot'] = 0
 if 'traditional_result' not in st.session_state:
     st.session_state['traditional_result'] = 0
+if 'traditional_residue_history' not in st.session_state:
+    st.session_state['traditional_residue_history'] = []
 if 'b12_result' not in st.session_state:
     st.session_state['b12_result'] = 0
 if 'stats' not in st.session_state:
@@ -125,27 +115,26 @@ if 'residue_history' not in st.session_state:
     st.session_state['residue_history'] = []
 if 'renorm_events' not in st.session_state:
     st.session_state['renorm_events'] = []
-
 # Simulation Button
 if st.button("Run Simulation"):
     # Generate sample data
     x = np.linspace(0.1, vector_size / 10.0, vector_size)
     y = np.ones(vector_size)
-    
+   
     # Compute
     st.session_state['std_dot'] = np.dot(x, y)
-    st.session_state['traditional_result'] = traditional_dot_with_drift(x, y)
+    st.session_state['traditional_result'], st.session_state['traditional_residue_history'] = traditional_dot_with_drift(x, y)
     st.session_state['b12_result'], st.session_state['stats'], st.session_state['residue_history'], st.session_state['renorm_events'] = b12_dot_ref(x, y, scale=scale_digits, early_trip=early_trip)
-    
+   
     # Display Simplified Results with Benefits
     st.subheader("Simulation Results")
     st.write(f"**Standard Compute Result (Truth)**: {st.session_state['std_dot']:.2f}")
     st.write(f"**Traditional Method Result**: {st.session_state['traditional_result']:.2f} (Error: {abs(st.session_state['std_dot'] - st.session_state['traditional_result']):.2e} - Shows potential drift)")
     st.write(f"**Base-12 Result**: {st.session_state['b12_result']:.2f} (Error: {abs(st.session_state['std_dot'] - st.session_state['b12_result']):.2e} - Bounded and efficient)")
-    
+   
     # Investor-Focused Stats
-    energy_savings_pct = (1 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'])) * 30  # Scale simulation efficiency to projected 30% max savings
-    accuracy_improvement_pct = (abs(st.session_state['std_dot'] - st.session_state['traditional_result']) - abs(st.session_state['std_dot'] - st.session_state['b12_result'])) / abs(st.session_state['std_dot'] - st.session_state['traditional_result']) * 100 if abs(st.session_state['std_dot'] - st.session_state['traditional_result']) > 0 else 100  # % error reduction from simulation
+    energy_savings_pct = (1 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'])) * 30 # Scale simulation efficiency to projected 30% max savings
+    accuracy_improvement_pct = (abs(st.session_state['std_dot'] - st.session_state['traditional_result']) - abs(st.session_state['std_dot'] - st.session_state['b12_result'])) / abs(st.session_state['std_dot'] - st.session_state['traditional_result']) * 100 if abs(st.session_state['std_dot'] - st.session_state['traditional_result']) > 0 else 100 # % error reduction from simulation
     st.markdown("""
     **Key Wins**:
     - Operations Handled: {ops_total}
@@ -154,13 +143,12 @@ if st.button("Run Simulation"):
     - Projected Energy Savings: ~{energy_savings_pct:.0f}% (Based on simulation efficiency)
     - Accuracy Improvement: ~{accuracy_improvement_pct:.0f}% (From reduced errors in demo)
     """.format(ops_total=st.session_state['stats']['ops_total'], renorm_local=st.session_state['stats']['renorm_local'], max_abs_r12=st.session_state['stats']['max_abs_r12'], energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
-
     # Prepare Data for Altair Charts
     # For Timeline: Smooth with moving average for wave effect
     moving_avg = pd.Series(st.session_state['residue_history']).rolling(window=3, min_periods=1).mean()
     residue_df = pd.DataFrame({'Operation': range(len(st.session_state['residue_history'])), 'Risk Level': moving_avg})
     renorm_df = pd.DataFrame({'Fix Point': st.session_state['renorm_events']})
-    
+   
     # For Pie: Bin into categories
     bins = [0, 0.00001, 0.0001, float('inf')]
     labels = ['Tiny Risk', 'Medium Risk', 'High Risk']
@@ -168,20 +156,20 @@ if st.button("Run Simulation"):
     pie_df = hist_df['Category'].value_counts(normalize=True).reset_index()
     pie_df.columns = ['Category', 'Percentage']
     pie_df['Percentage'] *= 100
-    
+   
     # For Gauge: Efficiency score
     efficiency_score = 100 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'] * 100)
     gauge_df = pd.DataFrame({'Score': [efficiency_score]})
-    
+   
     # For Showdown: Side-by-side errors
     showdown_df = pd.DataFrame({
         'Method': ['Traditional', 'Base-12'],
         'Error': [abs(st.session_state['std_dot'] - st.session_state['traditional_result']), abs(st.session_state['std_dot'] - st.session_state['b12_result'])]
     })
-    
+   
     # Dashboard with New Visuals
     st.subheader("Visual Insights: The Base-12 Advantage")
-    
+   
     col1, col2 = st.columns(2)
     with col1:
         # 1. Error Wave Control Line Chart
@@ -194,9 +182,8 @@ if st.button("Run Simulation"):
             x='Fix Point'
         )
         danger_line = alt.Chart(pd.DataFrame({'y': [0.0001]})).mark_rule(color='orange', strokeDash=[2,2]).encode(y='y')
-        st.altair_chart(timeline + events + danger_line, use_container_width=True)
+        st.altair_chart((timeline + events + danger_line).interactive(), use_container_width=True)
         st.caption("Risk waves up but auto-fixes (red lines) keep it below danger (orange)—preventing costly issues. Result: Stable AI, reduced downtime.")
-
     with col2:
         # 2. Error Size Breakdown Pie Chart
         pie = alt.Chart(pie_df).mark_arc(innerRadius=50).encode(
@@ -204,9 +191,8 @@ if st.button("Run Simulation"):
             color=alt.Color('Category', scale=alt.Scale(domain=['Tiny Risk', 'Medium Risk', 'High Risk'], range=['green', 'yellow', 'red'])),
             tooltip=['Category', 'Percentage']
         ).properties(title='Risk Size Breakdown')
-        st.altair_chart(pie, use_container_width=True)
+        st.altair_chart(pie.interactive(), use_container_width=True)
         st.caption("Mostly tiny risks (green)—easy to handle, meaning less waste and higher profits.")
-
     col3, col4 = st.columns(2)
     with col3:
         # 3. Fix Efficiency Score Gauge
@@ -222,9 +208,8 @@ if st.button("Run Simulation"):
         text = alt.Chart(gauge_df).mark_text(radius=35, size=20).encode(
             text=alt.Text('Score:Q', format='.0f')
         )
-        st.altair_chart(base + gauge + text, use_container_width=True)
+        st.altair_chart((base + gauge + text).interactive(), use_container_width=True)
         st.caption("High score = efficient fixes, cutting energy by 20-30%—imagine the savings at scale!")
-
     with col4:
         # 4. Accuracy Showdown Side-by-Side Bars
         showdown_bar = alt.Chart(showdown_df).mark_bar().encode(
@@ -233,34 +218,49 @@ if st.button("Run Simulation"):
             color=alt.Color('Method', scale=alt.Scale(domain=['Traditional', 'Base-12'], range=['red', 'green'])),
             tooltip=['Method', 'Error']
         ).properties(title='Accuracy Showdown')
-        st.altair_chart(showdown_bar, use_container_width=True)
+        st.altair_chart(showdown_bar.interactive(), use_container_width=True)
         st.caption("Base-12 crushes traditional errors—reliable results mean fewer failed AI runs and more revenue.")
-
+    col5, col6 = st.columns(2)
+    with col5:
+        # Additional Graph: Error Accumulation Comparison
+        moving_avg_b12 = pd.Series(st.session_state['residue_history']).rolling(window=3, min_periods=1).mean()
+        moving_avg_trad = pd.Series(st.session_state['traditional_residue_history']).rolling(window=3, min_periods=1).mean()
+        df_b12 = pd.DataFrame({'Operation': range(len(moving_avg_b12)), 'Risk Level': moving_avg_b12, 'Method': 'Base-12'})
+        df_trad = pd.DataFrame({'Operation': range(len(moving_avg_trad)), 'Risk Level': moving_avg_trad, 'Method': 'Traditional'})
+        df_combined = pd.concat([df_b12, df_trad])
+        comp_chart = alt.Chart(df_combined).mark_line().encode(
+            x='Operation:Q',
+            y='Risk Level:Q',
+            color=alt.Color('Method', scale=alt.Scale(domain=['Base-12', 'Traditional'], range=['blue', 'red'])),
+            tooltip=['Operation', 'Risk Level', 'Method']
+        ).properties(title='Error Accumulation: Base-12 vs Traditional').interactive()
+        st.altair_chart(comp_chart, use_container_width=True)
+        st.caption("Observe how Base-12 bounds the error while traditional methods allow drift to accumulate.")
+    with col6:
+        pass  # Placeholder for potential future graph
 # ROI Calculator Section (integrated with simulation results)
 st.subheader("Estimate Your ROI with Base-12 (Based on This Simulation)")
 annual_spend = st.number_input("Your Annual Compute Spend ($)", min_value=100000, max_value=1000000000, value=10000000, step=100000, help="Enter your estimated yearly cost for AI compute (e.g., cloud bills, hardware).")
 # Use simulation-derived defaults from session state
-energy_savings_pct = (1 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'])) * 30  # Scale simulation efficiency to projected 30% max savings
-accuracy_improvement_pct = (abs(st.session_state['std_dot'] - st.session_state['traditional_result']) - abs(st.session_state['std_dot'] - st.session_state['b12_result'])) / abs(st.session_state['std_dot'] - st.session_state['traditional_result']) * 100 if abs(st.session_state['std_dot'] - st.session_state['traditional_result']) > 0 else 100  # % error reduction from simulation
+energy_savings_pct = (1 - (st.session_state['stats']['renorm_local'] / st.session_state['stats']['ops_total'])) * 30 # Scale simulation efficiency to projected 30% max savings
+accuracy_improvement_pct = (abs(st.session_state['std_dot'] - st.session_state['traditional_result']) - abs(st.session_state['std_dot'] - st.session_state['b12_result'])) / abs(st.session_state['std_dot'] - st.session_state['traditional_result']) * 100 if abs(st.session_state['std_dot'] - st.session_state['traditional_result']) > 0 else 100 # % error reduction from simulation
 st.markdown("""
 **Simulation-Based Defaults**: Energy Savings ~{energy_savings_pct:.0f}%, Accuracy Improvement ~{accuracy_improvement_pct:.0f}% (Run simulation first for accurate values; adjust if needed)
 """.format(energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
-
 # Customizable sliders for ROI
 energy_cost_per_kwh = st.slider("Energy Cost per kWh ($)", min_value=0.05, max_value=0.50, value=0.10, step=0.01, help="Average cost of electricity for your data center operations.")
 failure_rate_traditional = st.slider("Traditional Failure Rate (% of runs needing retry)", min_value=5, max_value=50, value=20, step=1, help="Estimated % of AI runs that fail or need retraining due to errors in traditional systems.")
 num_runs_per_year = st.number_input("Number of AI Runs per Year", min_value=100, max_value=1000000, value=10000, step=100, help="How many compute-intensive AI tasks (e.g., model trainings) you run annually.")
-
 if st.button("Calculate ROI"):
     # ROI calculations with customizable inputs
-    energy_consumption_per_run = 100  # Placeholder kWh per run (adjust based on simulation scale if needed)
-    total_energy_cost = annual_spend * 0.6  # Assume 60% of spend is energy (customizable logic)
+    energy_consumption_per_run = 100 # Placeholder kWh per run (adjust based on simulation scale if needed)
+    total_energy_cost = annual_spend * 0.6 # Assume 60% of spend is energy (customizable logic)
     savings_from_energy = total_energy_cost * (energy_savings_pct / 100)
-    savings_from_accuracy = annual_spend * (failure_rate_traditional / 100) * (accuracy_improvement_pct / 100) * 0.4  # Assume 40% of spend impacted by failures
+    savings_from_accuracy = annual_spend * (failure_rate_traditional / 100) * (accuracy_improvement_pct / 100) * 0.4 # Assume 40% of spend impacted by failures
     total_savings = savings_from_energy + savings_from_accuracy
-    payback_period = annual_spend / total_savings if total_savings > 0 else 0  # Years to payback
+    payback_period = annual_spend / total_savings if total_savings > 0 else 0 # Years to payback
     net_roi_pct = (total_savings / annual_spend) * 100 if annual_spend > 0 else 0
-    
+   
     st.markdown("""
     **Estimated Annual Savings**: ${total_savings:,.0f}
     - From Energy (at ${energy_cost_per_kwh:.2f}/kWh): ${savings_from_energy:,.0f}
@@ -269,7 +269,33 @@ if st.button("Calculate ROI"):
     **Net ROI Year 1**: {net_roi_pct:.0f}% return on investment.
     Scale this to your operations—contact us for custom projections!
     """.format(total_savings=total_savings, energy_cost_per_kwh=energy_cost_per_kwh, savings_from_energy=savings_from_energy, failure_rate_traditional=failure_rate_traditional, savings_from_accuracy=savings_from_accuracy, payback_period=payback_period, net_roi_pct=net_roi_pct))
-
+    # Additional Graphs for ROI
+    st.subheader("ROI Visuals")
+    col_roi1, col_roi2 = st.columns(2)
+    with col_roi1:
+        # Projected Cumulative Savings Over Time
+        years = np.arange(1, 6)
+        cum_savings = total_savings * years
+        savings_df = pd.DataFrame({'Year': years, 'Cumulative Savings': cum_savings})
+        savings_chart = alt.Chart(savings_df).mark_line(point=True).encode(
+            x='Year:Q',
+            y='Cumulative Savings:Q',
+            tooltip=['Year', 'Cumulative Savings']
+        ).properties(title='Cumulative Savings Over Time').interactive()
+        st.altair_chart(savings_chart, use_container_width=True)
+    with col_roi2:
+        # Savings Breakdown
+        breakdown_df = pd.DataFrame({
+            'Category': ['Energy', 'Accuracy'],
+            'Savings': [savings_from_energy, savings_from_accuracy]
+        })
+        breakdown_bar = alt.Chart(breakdown_df).mark_bar().encode(
+            x='Category',
+            y='Savings:Q',
+            color='Category',
+            tooltip=['Category', 'Savings']
+        ).properties(title='Savings Breakdown').interactive()
+        st.altair_chart(breakdown_bar, use_container_width=True)
 # Closing Pitch
 st.markdown("""
 ### Why Invest in Base-12?
