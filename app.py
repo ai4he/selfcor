@@ -251,15 +251,16 @@ if st.button("Calculate ROI"):
     accuracy_savings = annual_spend * (accuracy_improvement_pct / 100) * 0.2  # Assume 20% of spend impacted by accuracy
     total_roi = savings + accuracy_savings
     payback_period = annual_spend / total_roi if total_roi > 0 else 0  # Years to payback
+    net_roi_pct = energy_savings_pct + accuracy_improvement_pct  # Calculate sum outside
     
     st.markdown("""
-    **Estimated Annual Savings**: ${savings:.0f}
-    - From Energy: ${savings:.0f}
-    - From Accuracy: ${accuracy_savings:.0f}
+    **Estimated Annual Savings**: ${total_roi:,.0f}
+    - From Energy: ${savings:,.0f}
+    - From Accuracy: ${accuracy_savings:,.0f}
     **Payback Period**: {payback_period:.1f} years
-    **Net ROI Year 1**: {(energy_savings_pct + accuracy_improvement_pct):.0f}% return on investment.
+    **Net ROI Year 1**: {net_roi_pct:.0f}% return on investment.
     Scale this to your operations—contact us for custom projections!
-    """.format(savings=savings, accuracy_savings=accuracy_savings, payback_period=payback_period, energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
+    """.format(total_roi=total_roi, savings=savings, accuracy_savings=accuracy_savings, payback_period=payback_period, net_roi_pct=net_roi_pct))
 
 # Closing Pitch
 st.markdown("""
