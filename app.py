@@ -303,27 +303,32 @@ st.markdown("""
 - **Traction**: PoC ready; patents pending; early tests show 20-30% energy gains.
 - **Team Vision**: Building middleware and hardware for broad adoption.
 Self-correcting compute that bounds errors (drift), saves energy (fewer fixes), and scales for AI—making it a smart investment in a $500B+ market.
-1. Risk Wave Control (Top-Left: Line Chart with Red Lines and Orange Dash)
+
+**1. Risk Wave Control** (Top-Left: Line Chart with Red Lines and Orange Dash)
 What It Shows: A blue line ("Risk Level") waving up and down over "Operations" (steps in the computation). Red dashed lines mark "auto-fixes." An orange dashed line is the "danger zone" threshold.
 Key Insights: The line shows how small errors (risk) build gradually during ops, but get reset sharply at fixes (every ~12 steps or when nearing danger). The smoothing makes it look like a controlled "wave" rather than jagged noise. If no fixes, the line would climb uncontrollably (like in traditional methods).
 Investor Angle: Demonstrates reliability—prevents "drift" that causes AI failures or retries, saving time/money. At scale, this means 20-30% less energy on corrections, translating to millions in data center savings.
 How to Explain It: "See this blue wave? It's like risk building in a stock portfolio. Without intervention, it spikes and crashes value. But Base-12 auto-fixes (red lines) reset it before hitting danger (orange)—keeping everything stable. Result? Your AI investments perform reliably, cutting waste and boosting returns."
-2. Risk Size Breakdown (Top-Right: Pie Chart with Green/Yellow/Red Slices)
+
+**2. Risk Size Breakdown** (Top-Right: Pie Chart with Green/Yellow/Red Slices)
 What It Shows: A pie divided into "Tiny Risk" (green, usually biggest), "Medium Risk" (yellow), and "High Risk" (red, hopefully tiny or none). Percentages show shares of total errors.
 Key Insights: Most errors fall into "tiny" because base-12's math cancels them naturally (e.g., clean fractions). Minimal "high risk" means the system handles issues efficiently without heavy intervention.
 Investor Angle: Low high-risk slices = lower operational costs (fewer big fixes). This efficiency scales to real AI (e.g., training LLMs), reducing compute bills by optimizing "hot paths" like matrix multiplications.
 How to Explain It: "This pie is your error portfolio—mostly green 'tiny risks' that are cheap to fix. Yellow and red? Minimal, thanks to our tech. It's like diversifying investments to minimize losses—Base-12 ensures 90%+ of issues are low-cost, freeing up budget for growth instead of firefighting."
-3. Fix Efficiency Score (Bottom-Left: Gauge with Needle)
+
+**3. Fix Efficiency Score** (Bottom-Left: Gauge with Needle)
 What It Shows: A semi-circle "gauge" (like a speedometer) with a needle pointing to a score (0-100%). Color shifts red-yellow-green based on efficiency (high = green).
 Key Insights: Score = % of ops without fixes (100 - (fixes/ops * 100)). High score means minimal interventions, as base-12's 12-step rhythm cancels errors constructively. Low fixes = low overhead.
 Investor Angle: Directly ties to ROI—high score = 20-30% energy savings (fewer cycles wasted). For investors, it's a "performance metric" like EBITDA—higher means better margins in AI ops.
 How to Explain It: "Think of this gauge as your efficiency dashboard. The needle in green? That's Base-12 delivering 90%+ ops without extra work—saving energy like a fuel-efficient engine. Traditional tech? Stuck in yellow/red, burning cash. Invest here, and watch your AI costs drop while performance soars."
-4. Accuracy Showdown (Bottom-Right: Side-by-Side Bars)
+
+**4. Accuracy Showdown** (Bottom-Right: Side-by-Side Bars)
 What It Shows: Two bars: "Traditional" (red, taller = more error) vs "Base-12" (green, shorter = less error).
 Key Insights: Base-12's error is tiny/bounded vs traditional's growing drift. Shows self-correction in action—final results stay accurate without compounding issues.
 Investor Angle: Lower bars = fewer failed runs/retrains, higher reliability = faster time-to-market for AI products. Quantifies "edge": e.g., 50-90% error reduction = billions in avoided losses for big AI firms.
 How to Explain It: "Head-to-head: Red bar is traditional compute's error—tall and risky, like betting on volatile stocks. Green? Base-12 crushes it with minimal height. This showdown proves our tech delivers precise AI outputs, reducing risks and unlocking revenue—perfect for scaling your portfolio."
-5. Overall Pitch Tie-In
+
+**5. Overall Pitch Tie-In**
 These visuals aren't just data—they show real value: Efficiency (gauge), control (wave), minimization (pie), and superiority (showdown). Base-12 turns AI compute from a cost center into a profit driver." For investors, emphasize projections: "At data center scale, this means $10-50M annual savings per client.
 Contact us to discuss partnership or funding opportunities!
 """)
