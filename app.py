@@ -126,6 +126,7 @@ if 'residue_history' not in st.session_state:
 if 'renorm_events' not in st.session_state:
     st.session_state['renorm_events'] = []
 
+# Simulation Button
 if st.button("Run Simulation"):
     # Generate sample data
     x = np.linspace(0.1, vector_size / 10.0, vector_size)
@@ -252,13 +253,13 @@ if st.button("Calculate ROI"):
     payback_period = annual_spend / total_roi if total_roi > 0 else 0  # Years to payback
     
     st.markdown("""
-    **Estimated Annual Savings**: ${total_roi:,.0f}
-    - From Energy: ${savings:,.0f}
-    - From Accuracy: ${accuracy_savings:,.0f}
+    **Estimated Annual Savings**: ${savings:.0f}
+    - From Energy: ${savings:.0f}
+    - From Accuracy: ${accuracy_savings:.0f}
     **Payback Period**: {payback_period:.1f} years
     **Net ROI Year 1**: {(energy_savings_pct + accuracy_improvement_pct):.0f}% return on investment.
     Scale this to your operations—contact us for custom projections!
-    """.format(total_roi=total_roi, savings=savings, accuracy_savings=accuracy_savings, payback_period=payback_period, energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
+    """.format(savings=savings, accuracy_savings=accuracy_savings, payback_period=payback_period, energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
 
 # Closing Pitch
 st.markdown("""
