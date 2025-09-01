@@ -112,6 +112,16 @@ early_trip = st.checkbox(
     help="Triggers fixes if errors grow too fast, saving energy by preventing big buildups."
 )
 
+# Initialize variables for ROI defaults (to avoid NameError on load)
+energy_savings_pct = 0
+accuracy_improvement_pct = 0
+stats = {'ops_total': 1, 'renorm_local': 0}  # Default to avoid division by zero
+std_dot = 0
+traditional_result = 0
+b12_result = 0
+residue_history = []
+renorm_events = []
+
 if st.button("Run Simulation"):
     # Generate sample data
     x = np.linspace(0.1, vector_size / 10.0, vector_size)
@@ -225,7 +235,9 @@ if st.button("Run Simulation"):
 st.subheader("Estimate Your ROI with Base-12 (Based on This Simulation)")
 annual_spend = st.number_input("Your Annual Compute Spend ($)", min_value=100000, max_value=1000000000, value=10000000, step=100000, help="Enter your estimated yearly cost for AI compute (e.g., cloud bills, hardware).")
 # Use simulation-derived defaults
-st.markdown(f"**Simulation-Based Defaults**: Energy Savings ~{energy_savings_pct:.0f}%, Accuracy Improvement ~{accuracy_improvement_pct:.0f}% (Adjust if needed)")
+st.markdown("""
+**Simulation-Based Defaults**: Energy Savings ~{energy_savings_pct:.0f}%, Accuracy Improvement ~{accuracy_improvement_pct:.0f}% (Adjust if needed)
+""".format(energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
 
 if st.button("Calculate ROI"):
     savings = annual_spend * (energy_savings_pct / 100)
@@ -233,14 +245,14 @@ if st.button("Calculate ROI"):
     total_roi = savings + accuracy_savings
     payback_period = annual_spend / total_roi if total_roi > 0 else 0  # Years to payback
     
-    st.markdown(f"""
+    st.markdown("""
     **Estimated Annual Savings**: ${total_roi:,.0f}
     - From Energy: ${savings:,.0f}
     - From Accuracy: ${accuracy_savings:,.0f}
     **Payback Period**: {payback_period:.1f} years
     **Net ROI Year 1**: {(energy_savings_pct + accuracy_improvement_pct):.0f}% return on investment.
     Scale this to your operations—contact us for custom projections!
-    """)
+    """.format(total_roi=total_roi, savings=savings, accuracy_savings=accuracy_savings, payback_period=payback_period, energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
 
 # Closing Pitch
 st.markdown("""
