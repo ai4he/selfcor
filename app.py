@@ -1,7 +1,8 @@
 import streamlit as st
 import math
 import numpy as np
-import matplotlib.pyplot as plt
+import altair as alt
+import pandas as pd
 
 # Base-12 Helper Functions (from spec)
 def b12_pow12(s):
@@ -87,37 +88,53 @@ if st.button("Run Demo"):
     st.write(f"Error: {abs(std_dot - b12_result)}")
     st.write(f"Stats: {stats}")
     
-    # Create Dashboard Plot
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle('Base-12 12-RRC Drift Dashboard', fontsize=16)
+    # Prepare Data for Altair Charts
+    residue_df = pd.DataFrame({'Operation Index': range(len(residue_history)), '|r12|': residue_history})
+    renorm_df = pd.DataFrame({'Renorm Events': renorm_events, 'y': [max(residue_history or [0])] * len(renorm_events)})
+    hist_df = pd.DataFrame({'|r12|': residue_history})
+    bar_df = pd.DataFrame({'Category': ['Local Renorms'], 'Count': [stats['renorm_local']]})
+    error_df = pd.DataFrame({'Category': ['Error'], 'Value': [abs(std_dot - b12_result)]})
     
-    # Residue Timeline
-    axs[0, 0].plot(residue_history, label='|r12|')
-    axs[0, 0].vlines(renorm_events, ymin=0, ymax=max(residue_history or [0]), color='r', linestyle='--', label='Renorm Events')
-    axs[0, 0].set_title('Residue Magnitude Timeline')
-    axs[0, 0].set_xlabel('Operation Index')
-    axs[0, 0].set_ylabel('|r12|')
-    axs[0, 0].legend()
-    axs[0, 0].grid(True)
+    # Dashboard Charts (using Altair)
+    st.subheader("Drift Dashboard")
     
-    # Residue Histogram
-    axs[0, 1].hist(residue_history, bins=10, color='skyblue', edgecolor='black')
-    axs[0, 1].set_title('Residue Magnitude Histogram')
-    axs[0, 1].set_xlabel('|r12| Bins')
-    axs[0, 1].set_ylabel('Frequency')
-    axs[0, 1].grid(True)
+    col1, col2 = st.columns(2)
+    with col1:
+        # Residue Timeline
+        timeline = alt.Chart(residue_df).mark_line(color='blue').encode(
+            x='Operation Index',
+            y='|r12|',
+            tooltip=['Operation Index', '|r12|']
+        ).properties(title='Residue Magnitude Timeline')
+        events = alt.Chart(renorm_df).mark_rule(color='red', strokeDash=[4,4]).encode(
+            x='Renorm Events'
+        )
+        st.altair_chart(timeline + events, use_container_width=True)
     
-    # Renorm Frequency
-    axs[1, 0].bar(['Local Renorms'], [stats['renorm_local']], color='green')
-    axs[1, 0].set_title('Renorm Frequency')
-    axs[1, 0].set_ylabel('Count')
-    axs[1, 0].grid(True)
+    with col2:
+        # Residue Histogram
+        hist = alt.Chart(hist_df).mark_bar(color='skyblue').encode(
+            alt.X('|r12|', bin=True),
+            y='count()',
+            tooltip=['|r12|', 'count()']
+        ).properties(title='Residue Magnitude Histogram')
+        st.altair_chart(hist, use_container_width=True)
     
-    # Error vs Truth
-    axs[1, 1].bar(['Error'], [abs(std_dot - b12_result)], color='orange')
-    axs[1, 1].set_title('Error vs FP Truth')
-    axs[1, 1].set_ylabel('Absolute Error')
-    axs[1, 1].grid(True)
+    col3, col4 = st.columns(2)
+    with col3:
+        # Renorm Frequency
+        renorm_bar = alt.Chart(bar_df).mark_bar(color='green').encode(
+            x='Category',
+            y='Count',
+            tooltip=['Category', 'Count']
+        ).properties(title='Renorm Frequency')
+        st.altair_chart(renorm_bar, use_container_width=True)
     
-    plt.tight_layout()
-    st.pyplot(fig)
+    with col4:
+        # Error vs Truth
+        error_bar = alt.Chart(error_df).mark_bar(color='orange').encode(
+            x='Category',
+            y='Value',
+            tooltip=['Category', 'Value']
+        ).properties(title='Error vs FP Truth')
+        st.altair_chart(error_bar, use_container_width=True)
