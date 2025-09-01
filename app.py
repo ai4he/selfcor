@@ -112,16 +112,6 @@ early_trip = st.checkbox(
     help="Triggers fixes if errors grow too fast, saving energy by preventing big buildups."
 )
 
-# Initialize variables for ROI defaults (to avoid NameError on load)
-energy_savings_pct = 0
-accuracy_improvement_pct = 0
-stats = {'ops_total': 1, 'renorm_local': 0}  # Default to avoid division by zero
-std_dot = 0
-traditional_result = 0
-b12_result = 0
-residue_history = []
-renorm_events = []
-
 if st.button("Run Simulation"):
     # Generate sample data
     x = np.linspace(0.1, vector_size / 10.0, vector_size)
@@ -131,6 +121,14 @@ if st.button("Run Simulation"):
     std_dot = np.dot(x, y)
     traditional_result = traditional_dot_with_drift(x, y)
     b12_result, stats, residue_history, renorm_events = b12_dot_ref(x, y, scale=scale_digits, early_trip=early_trip)
+    
+    # Store in session state
+    st.session_state['std_dot'] = std_dot
+    st.session_state['traditional_result'] = traditional_result
+    st.session_state['b12_result'] = b12_result
+    st.session_state['stats'] = stats
+    st.session_state['residue_history'] = residue_history
+    st.session_state['renorm_events'] = renorm_events
     
     # Display Simplified Results with Benefits
     st.subheader("Simulation Results")
@@ -234,9 +232,11 @@ if st.button("Run Simulation"):
 # ROI Calculator Section (integrated with simulation results)
 st.subheader("Estimate Your ROI with Base-12 (Based on This Simulation)")
 annual_spend = st.number_input("Your Annual Compute Spend ($)", min_value=100000, max_value=1000000000, value=10000000, step=100000, help="Enter your estimated yearly cost for AI compute (e.g., cloud bills, hardware).")
-# Use simulation-derived defaults
+# Use simulation-derived defaults from session state
+energy_savings_pct = st.session_state.get('energy_savings_pct', 0)
+accuracy_improvement_pct = st.session_state.get('accuracy_improvement_pct', 0)
 st.markdown("""
-**Simulation-Based Defaults**: Energy Savings ~{energy_savings_pct:.0f}%, Accuracy Improvement ~{accuracy_improvement_pct:.0f}% (Adjust if needed)
+**Simulation-Based Defaults**: Energy Savings ~{energy_savings_pct:.0f}%, Accuracy Improvement ~{accuracy_improvement_pct:.0f}% (Run simulation first for accurate values; adjust if needed)
 """.format(energy_savings_pct=energy_savings_pct, accuracy_improvement_pct=accuracy_improvement_pct))
 
 if st.button("Calculate ROI"):
