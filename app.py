@@ -194,15 +194,14 @@ if st.button("Run Simulation"):
     with col3:
         # 3. Fix Efficiency Score Gauge
         base = alt.Chart(gauge_df).mark_arc(color="lightgray", innerRadius=50, outerRadius=60).encode(
-            theta=alt.Theta(value=0, type="quantitative").stack(False),
-            theta2=alt.Theta2(value=100, type="quantitative").stack(False)
+            theta=alt.value(0),
+            theta2=alt.value(100)
         )
         gauge = alt.Chart(gauge_df).mark_arc(innerRadius=50, outerRadius=60).encode(
-            theta=alt.Theta("Score:Q").stack(False),
-            theta2=alt.Theta2(value=0, type="quantitative").stack(False),
-            color=alt.Color("Score:Q", scale=alt.Scale(domain=[0,100], range=['red', 'yellow', 'green'])),
-            tooltip=['Score']
-        ).properties(title='Fix Efficiency Score')
+            theta=alt.value(0),
+            theta2='Score:Q',
+            color=alt.Color("Score:Q", scale=alt.Scale(domain=[0,100], range=['red', 'yellow', 'green']))
+        )
         text = alt.Chart(gauge_df).mark_text(radius=35, size=20).encode(
             text=alt.Text('Score:Q', format='.0f')
         )
