@@ -262,5 +262,4 @@ Investor Angle: Lower bars = fewer failed runs/retrains, higher reliability = fa
 How to Explain It: "Head-to-head: Red bar is traditional compute's error—tall and risky, like betting on volatile stocks. Green? Base-12 crushes it with minimal height. This showdown proves our tech delivers precise AI outputs, reducing risks and unlocking revenue—perfect for scaling your portfolio."
 
 Overall Pitch Tie-In
-"These visuals aren't just data—they show real value: Efficiency (gauge), control (wave), minimization (pie), and superiority (showdown). Base-12 turns AI compute from a cost center into a profit driver." For investors, emphasize projections: "At data center scale, this means $10-50M annual savings per client." If needed, we can add more (e.g., ROI calculator)—let me know!
-""")
+"These visuals aren't just data—they show real value: Efficiency (gauge), control (wave), minimization (pie), and superiority (showdown). Base-12 turns AI compute from a cost center into a profit driver." For investors, emphasize projections: "At data center scale, this means $10-50M annual savings per client."
